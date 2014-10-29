@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"erasure"
+
+	"fmt"
+)
 
 func main() {
-	fmt.Printf("Hello, world.\n")
+	fmt.Println(erasure.Hello())
 }
