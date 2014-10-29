@@ -50,7 +50,7 @@ DEBUG_nasm = -g
 CFLAGS_gcc = -Wall
 ASFLAGS_   = -f elf64
 ARFLAGS_   = cr $@
-STRIP_gcc  = strip -d -R .comment $@
+STRIP_gcc  = true # strip -d -R .comment $@
 
 # arch=32 build options
 ASFLAGS_32 = -f elf32
