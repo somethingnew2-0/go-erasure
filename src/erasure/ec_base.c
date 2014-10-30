@@ -261,7 +261,7 @@ void gf_vect_mul_init(unsigned char c, unsigned char *tbl)
 #endif //__WORDSIZE == 64 || _WIN64 || __x86_64__
 }
 
-void gf_vect_dot_prod_base(int len, int vlen, unsigned char *v,
+void gf_vect_dot_prod(int len, int vlen, unsigned char *v,
 			   unsigned char **src, unsigned char *dest)
 {
 	int i, j;
@@ -275,7 +275,7 @@ void gf_vect_dot_prod_base(int len, int vlen, unsigned char *v,
 	}
 }
 
-void ec_encode_data_base(int len, int srcs, int dests, unsigned char *v,
+void ec_encode_data(int len, int srcs, int dests, unsigned char *v,
 			 unsigned char **src, unsigned char **dest)
 {
 	int i, j, l;
@@ -292,7 +292,7 @@ void ec_encode_data_base(int len, int srcs, int dests, unsigned char *v,
 	}
 }
 
-void gf_vect_mul_base(int len, unsigned char *a, unsigned char *src, unsigned char *dest)
+void gf_vect_mul(int len, unsigned char *a, unsigned char *src, unsigned char *dest)
 {
 	//2nd element of table array is ref value used to fill it in
 	unsigned char c = a[1];
