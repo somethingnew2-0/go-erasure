@@ -21,7 +21,7 @@ func Hello() {
 	destination := make([]byte, m*sourceLength)
 
 	for i := range source {
-		source[i] = 0x60
+		source[i] = 0x62
 	}
 
 	encodeMatrix := make([]byte, m*k)
@@ -42,7 +42,7 @@ func Hello() {
 	fmt.Printf("Encode Matrix: %x\n", encodeMatrix)
 
 	// fmt.Printf("G Tables: %x\n", g_tbls)
-	C.ec_init_tables(C.int(k), C.int(m-k), (*C.uchar)(&encodeMatrix[0]), (*C.uchar)(&g_tbls[0]))
+	C.ec_init_tables(C.int(k), C.int(m-k), (*C.uchar)(&encodeMatrix[k*k]), (*C.uchar)(&g_tbls[0]))
 	fmt.Printf("G Tables: %x\n", g_tbls)
 
 	fmt.Printf("Source: %x\n", source)
@@ -50,18 +50,18 @@ func Hello() {
 	fmt.Printf("Dest: %x\n", destination)
 
 	decodeMatrix := make([]byte, m*k)
-	decodeIndex := make([]int, m)
-	srcErrList := make([]int, m)
-	srcInErr := make([]int, m-k)
+	decodeIndex := make([]int32, m)
+	srcErrList := make([]int32, m)
+	srcInErr := make([]int32, m-k)
 
-	srcErrList[0] = 1
-	srcErrList[1] = 1
-	srcErrList[2] = 1
-	srcErrList[3] = 1
-	srcInErr[0] = 0
-	srcInErr[1] = 1
-	srcInErr[2] = 2
-	srcInErr[3] = 3
+	srcErrList[8] = 1
+	srcErrList[9] = 1
+	srcErrList[10] = 1
+	srcErrList[11] = 1
+	srcInErr[0] = 8
+	srcInErr[1] = 9
+	srcInErr[2] = 10
+	srcInErr[3] = 11
 
 	nErrs := 4
 	nSrcErrs := 4
