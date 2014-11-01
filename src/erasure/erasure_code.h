@@ -96,7 +96,7 @@ void ec_encode_data(int len, int srcs, int dests, unsigned char *v, unsigned cha
 
 
 /**
- * @brief GF(2^8) vector dot product, runs baseline version.
+ * @brief GF(2^8) vector dot product
  * 
  * Does a GF(2^8) dot product across each byte of the input array and a constant
  * set of coefficients to produce each byte of the output. Can be used for
@@ -110,29 +110,6 @@ void ec_encode_data(int len, int srcs, int dests, unsigned char *v, unsigned cha
  *               of this array are used, where j = (0, 1, 2...) and CONST is the
  *               number of elements in the array of input coefficients. The 
  *               elements used correspond to the original input coefficients.		
- * @param src    Array of pointers to source inputs.
- * @param dest   Pointer to destination data array.
- * @returns none
- */
-
-void gf_vect_dot_prod(int len, int vlen, unsigned char *gftbls,
-                        unsigned char **src, unsigned char *dest);
-
-/**
- * @brief GF(2^8) vector dot product, runs appropriate version.
- *
- * Does a GF(2^8) dot product across each byte of the input array and a constant
- * set of coefficients to produce each byte of the output. Can be used for
- * erasure coding encode and decode. Function requires pre-calculation of a
- * 32*vlen byte constant array based on the input coefficients.
- * 
- * This function determines what instruction sets are enabled and
- * selects the appropriate version at runtime.
- *
- * @param len    Length of each vector in bytes. Must be >= 32.
- * @param vlen   Number of vector sources.
- * @param gftbls Pointer to 32*vlen byte array of pre-calculated constants based
- *               on the array of input coefficients.
  * @param src    Array of pointers to source inputs.
  * @param dest   Pointer to destination data array.
  * @returns none
