@@ -39,13 +39,13 @@ func Hello() {
 	// is not always invertable.
 	// C.gf_gen_rs_matrix((*C.uchar)(&encode_matrix[0]), C.int(m), C.int(k))
 
-	// fmt.Printf("Encode Matrix: %x\n", encode_matrix)
+	fmt.Printf("Encode Matrix: %x\n", encodeMatrix)
 
 	// fmt.Printf("G Tables: %x\n", g_tbls)
 	C.ec_init_tables(C.int(k), C.int(m-k), (*C.uchar)(&encodeMatrix[0]), (*C.uchar)(&g_tbls[0]))
 	fmt.Printf("G Tables: %x\n", g_tbls)
 
-	fmt.Printf("Sources: %x\n", source)
+	fmt.Printf("Source: %x\n", source)
 	C.ec_encode_data(C.int(sourceLength), C.int(k), C.int(m), (*C.uchar)(&g_tbls[0]), (*C.uchar)(&source[0]), (*C.uchar)(&destination[0]))
 	fmt.Printf("Dest: %x\n", destination)
 
@@ -67,4 +67,15 @@ func Hello() {
 	nSrcErrs := 4
 
 	C.gf_gen_decode_matrix((*C.uchar)(&encodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uint)(unsafe.Pointer(&decodeIndex[0])), (*C.uchar)(unsafe.Pointer(&srcErrList[0])), (*C.uchar)(unsafe.Pointer(&srcInErr[0])), C.int(nErrs), C.int(nSrcErrs), C.int(k), C.int(m))
+	fmt.Printf("Decode Matrix: %x\n", decodeMatrix)
+	fmt.Printf("Decode Index: %x\n", decodeIndex)
+
+	g_tbls = make([]byte, k*(m-k)*32)
+
+	C.ec_init_tables(C.int(k), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&g_tbls[0]))
+	fmt.Printf("G Tables: %x\n", g_tbls)
+
+	recovered := make([]byte, m*sourceLength)
+	C.ec_encode_data(C.int(sourceLength), C.int(k), C.int(m), (*C.uchar)(&g_tbls[0]), (*C.uchar)(&destination[0]), (*C.uchar)(&recovered[0]))
+	fmt.Printf("Recovered: %x\n", recovered)
 }
