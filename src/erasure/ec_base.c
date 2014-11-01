@@ -29,6 +29,8 @@
 
 #include <limits.h>
 #include <string.h>		// for memset
+#include <stdio.h>
+#include <stdlib.h>
 #include "erasure_code.h"
 #include "ec_base.h"		// for GF tables
 #include "types.h"
@@ -262,21 +264,21 @@ void gf_vect_mul_init(unsigned char c, unsigned char *tbl)
 }
 
 void gf_vect_dot_prod(int len, int vlen, unsigned char *v,
-			   unsigned char **src, unsigned char *dest)
+			   unsigned char *src, unsigned char *dest)
 {
 	int i, j;
 	unsigned char s;
 	for (i = 0; i < len; i++) {
 		s = 0;
 		for (j = 0; j < vlen; j++)
-			s ^= gf_mul(src[j][i], v[j * 32 + 1]);
+			s ^= gf_mul(src[(j*len)+i], v[j * 32 + 1]);
 
 		dest[i] = s;
 	}
 }
 
 void ec_encode_data(int len, int srcs, int dests, unsigned char *v,
-			 unsigned char **src, unsigned char **dest)
+			 unsigned char *src, unsigned char *dest)
 {
 	int i, j, l;
 	unsigned char s;
@@ -285,9 +287,10 @@ void ec_encode_data(int len, int srcs, int dests, unsigned char *v,
 		for (i = 0; i < len; i++) {
 			s = 0;
 			for (j = 0; j < srcs; j++)
-				s ^= gf_mul(src[j][i], v[j * 32 + l * srcs * 32 + 1]);
+				s ^= gf_mul(src[(j*len)+i], v[j * 32 + l * srcs * 32 + 1]);
 
-			dest[l][i] = s;
+      /* printf("%d\n", (l*len)+i); */
+			dest[(l*len)+i] = s;
 		}
 	}
 }
@@ -298,6 +301,88 @@ void gf_vect_mul(int len, unsigned char *a, unsigned char *src, unsigned char *d
 	unsigned char c = a[1];
 	while (len-- > 0)
 		*dest++ = gf_mul(c, *src++);
+}
+
+#define NO_INVERT_MATRIX -2
+// Generate decode matrix from encode matrix
+int gf_gen_decode_matrix(unsigned char *encode_matrix,
+				unsigned char *decode_matrix,
+				unsigned int *decode_index,
+				unsigned char *src_err_list,
+				unsigned char *src_in_err,
+				int nerrs, int nsrcerrs, int k, int m)
+{
+	int i, j, p;
+	int r;
+	unsigned char *b, *invert_matrix, s;
+	int incr = 0;
+
+	b = malloc(k * m);
+	invert_matrix = malloc(k * m);
+
+	if (b == NULL || invert_matrix == NULL) {
+		printf("Malloc failure! Error with malloc\n");
+		free(b);
+		free(invert_matrix);
+		return -1;
+	}
+	// Construct matrix b by removing error rows
+	for (i = 0, r = 0; i < k; i++, r++) {
+		while (src_in_err[r])
+			r++;
+		for (j = 0; j < k; j++) {
+			b[k * i + j] = encode_matrix[k * r + j];
+		}
+		decode_index[i] = r;
+	}
+	incr = 0;
+	while (gf_invert_matrix(b, invert_matrix, k) < 0) {
+		if (nerrs == (m - k)) {
+			free(b);
+		  free(invert_matrix);
+			printf("BAD MATRIX\n");
+			return NO_INVERT_MATRIX;
+		}
+		incr++;
+		for (i = nsrcerrs; i < nerrs - nsrcerrs; i++) {
+			if (src_err_list[i] == (decode_index[k - 1] + incr)) {
+				// skip the erased parity line
+				incr++;
+				continue;
+			}
+		}
+		if (decode_index[k - 1] + incr >= m) {
+			free(b);
+		  free(invert_matrix);
+      printf("BAD MATRIX\n");
+			return NO_INVERT_MATRIX;
+		}
+		decode_index[k - 1] += incr;
+		for (j = 0; j < k; j++)
+			b[k * (k - 1) + j] = encode_matrix[k * decode_index[k - 1] + j];
+
+	};
+
+	for (i = 0; i < nsrcerrs; i++) {
+		for (j = 0; j < k; j++) {
+			decode_matrix[k * i + j] = invert_matrix[k * src_err_list[i] + j];
+		}
+	}
+	/* src_err_list from encode_matrix * invert of b for parity decoding */
+	for (p = nsrcerrs; p < nerrs; p++) {
+		for (i = 0; i < k; i++) {
+			s = 0;
+			for (j = 0; j < k; j++)
+				s ^= gf_mul(invert_matrix[j * k + i],
+					    encode_matrix[k * src_err_list[p] + j]);
+
+			decode_matrix[k * p + i] = s;
+		}
+	}
+	free(b);
+	free(invert_matrix);
+			
+  return 0;
 }
 
 struct slver {

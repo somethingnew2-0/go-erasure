@@ -87,12 +87,12 @@ void ec_init_tables(int k, int rows, unsigned char* a, unsigned char* gftbls);
  * @param dests  The number of output vectors to concurrently encode/decode.
  * @param v      Pointer to array of input tables generated from coding
  * 		 coefficients in ec_init_tables(). Must be of size 32*k*rows
- * @param src    Array of pointers to source input buffers.
- * @param dest   Array of pointers to coded output buffers.
+ * @param src    Pointer to source input buffer.
+ * @param dest   Pointer to coded output buffers.
  * @returns none
  */
 
-void ec_encode_data(int len, int srcs, int dests, unsigned char *v, unsigned char **src, unsigned char **dest);
+void ec_encode_data(int len, int srcs, int dests, unsigned char *v, unsigned char *src, unsigned char *dest);
 
 
 /**
@@ -110,13 +110,13 @@ void ec_encode_data(int len, int srcs, int dests, unsigned char *v, unsigned cha
  *               of this array are used, where j = (0, 1, 2...) and CONST is the
  *               number of elements in the array of input coefficients. The 
  *               elements used correspond to the original input coefficients.		
- * @param src    Array of pointers to source inputs.
+ * @param src    Pointers to source input.
  * @param dest   Pointer to destination data array.
  * @returns none
  */
 
 void gf_vect_dot_prod(int len, int vlen, unsigned char *gftbls,
-                        unsigned char **src, unsigned char *dest);
+                        unsigned char *src, unsigned char *dest);
 
 /**********************************************************************
  * The remaining are lib support functions used in GF(2^8) operations.
@@ -185,6 +185,27 @@ void gf_gen_cauchy1_matrix(unsigned char *a, int m, int k);
  */
 
 int gf_invert_matrix(unsigned char *in, unsigned char *out, const int n);
+
+/**
+ * @brief Generate decode matrix from encode matrix
+ *
+ * @param encode_matrix  input matrix to generate decode matrix
+ * @param decode_matrix  output matrix to decode orignal source
+ * @param decode_index  ouptut mapping of decode matrix rows to encoded rows
+ * @param src_err_list input error list of the form [0, 0, 1, 0, ...] for valid encoded blocks
+ * @param src_in_err input error list of the form [2, 5, 6] for invalid encoded blocks
+ * @param nerrs number of encoded rows with errors
+ * @param nsrcerrs number of source errors less than k
+ * @param k number of source rows needed
+ * @param m number of encoded rows
+ * @returns 0 successful, other fail on singular input matrix
+ */
+int gf_gen_decode_matrix(unsigned char *encode_matrix,
+				unsigned char *decode_matrix,
+				unsigned int *decode_index,
+				unsigned char *src_err_list,
+				unsigned char *src_in_err,
+				int nerrs, int nsrcerrs, int k, int m);
 
 /*************************************************************/
 
