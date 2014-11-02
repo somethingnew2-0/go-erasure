@@ -95,6 +95,12 @@ void gf_gen_cauchy1_matrix(unsigned char *a, int m, int k)
 	for (i = k; i < m; i++)
 		for (j = 0; j < k; j++)
 			*p++ = gf_inv(i ^ j);
+  
+  printf("Encode Matrix: ");
+  for(int i = 0; i < k * m; i++) {
+    printf("%x", a[i]);
+  }
+  printf("\n");
 
 }
 

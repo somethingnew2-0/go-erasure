@@ -27,12 +27,15 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **********************************************************************/
 #include <limits.h>
+#include <stdio.h>
 #include "erasure_code.h"
 #include "types.h"
 
 void ec_init_tables(int k, int rows, unsigned char *a, unsigned char *g_tbls)
 {
 	int i, j;
+  unsigned char *b;
+  b = g_tbls;
 
 	for (i = 0; i < rows; i++) {
 		for (j = 0; j < k; j++) {
@@ -40,6 +43,12 @@ void ec_init_tables(int k, int rows, unsigned char *a, unsigned char *g_tbls)
 			g_tbls += 32;
 		}
 	}
+  
+  printf("G Tables: ");
+  for(int i = 0; i < k * rows * 32; i++) {
+    printf("%x", b[i]);
+  }
+  printf("\n");
 }
 
 struct slver {
