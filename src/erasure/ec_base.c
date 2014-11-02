@@ -299,6 +299,9 @@ void ec_encode_data(int len, int srcs, int dests, unsigned char *v,
 			dest[(l*len)+i] = s;
 		}
 	}
+  
+  printf("Encoded Data Matrix: \n");
+  dump_matrix(dest, srcs, len);
 }
 
 void gf_vect_mul(int len, unsigned char *a, unsigned char *src, unsigned char *dest)
