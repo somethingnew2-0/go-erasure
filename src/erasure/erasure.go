@@ -77,5 +77,5 @@ func Hello() {
 
 	recovered := make([]byte, m*sourceLength)
 	C.ec_encode_data(C.int(sourceLength), C.int(k), C.int(m), (*C.uchar)(&g_tbls[0]), (*C.uchar)(&destination[0]), (*C.uchar)(&recovered[0]))
-	fmt.Printf("Recovered: %x\n", recovered)
+	// fmt.Printf("Recovered: %x\n", recovered)
 }

@@ -313,7 +313,7 @@ void ec_encode_data(int len, int srcs, int dests, unsigned char *v,
 		}
 	}
   
-  printf("Encoded Data Matrix: \n");
+  printf("Dest Matrix: \n");
   dump_matrix(dest, srcs, len);
 }
 
