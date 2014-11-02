@@ -45,9 +45,9 @@ func Hello() {
 	C.ec_init_tables(C.int(k), C.int(m-k), (*C.uchar)(&encodeMatrix[k*k]), (*C.uchar)(&g_tbls[0]))
 	// fmt.Printf("G Tables: %x\n", g_tbls)
 
-	fmt.Printf("Source: %x\n", source)
+	// fmt.Printf("Source: %x\n", source)
 	C.ec_encode_data(C.int(sourceLength), C.int(k), C.int(m), (*C.uchar)(&g_tbls[0]), (*C.uchar)(&source[0]), (*C.uchar)(&destination[0]))
-	fmt.Printf("Dest: %x\n", destination)
+	// fmt.Printf("Dest: %x\n", destination)
 
 	decodeMatrix := make([]byte, m*k)
 	decodeIndex := make([]int32, m)

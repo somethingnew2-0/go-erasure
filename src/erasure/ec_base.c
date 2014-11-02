@@ -35,6 +35,19 @@
 #include "ec_base.h"		// for GF tables
 #include "types.h"
 
+
+void dump_matrix(unsigned char *s, int k, int m)
+{
+	int i, j;
+	for (i = 0; i < k; i++) {
+		for (j = 0; j < m; j++) {
+			printf(" %2x", s[i*m+j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+}
+
 unsigned char gf_mul(unsigned char a, unsigned char b)
 {
 #ifndef GF_LARGE_TABLES
