@@ -68,7 +68,7 @@ func Hello() {
 
 	C.gf_gen_decode_matrix((*C.uchar)(&encodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uint)(unsafe.Pointer(&decodeIndex[0])), (*C.uchar)(unsafe.Pointer(&srcErrList[0])), (*C.uchar)(unsafe.Pointer(&srcInErr[0])), C.int(nErrs), C.int(nSrcErrs), C.int(k), C.int(m))
 	fmt.Printf("Decode Matrix: %x\n", decodeMatrix)
-	fmt.Printf("Decode Index: %x\n", decodeIndex)
+	// fmt.Printf("Decode Index: %x\n", decodeIndex)
 
 	g_tbls = make([]byte, k*(m-k)*32)
 

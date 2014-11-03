@@ -410,6 +410,12 @@ int gf_gen_decode_matrix(unsigned char *encode_matrix,
 	}
 	free(b);
 	free(invert_matrix);
+  
+  printf("Decode Index: ");
+  for(int i = 0; i < m; i++) {
+    printf("%x", decode_index[i]);
+  }
+  printf("\n");
 			
   return 0;
 }
