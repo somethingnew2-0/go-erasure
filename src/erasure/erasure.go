@@ -54,14 +54,14 @@ func Hello() {
 	srcErrList := make([]int32, m)
 	srcInErr := make([]int32, m-k)
 
-	srcErrList[8] = 1
-	srcErrList[9] = 1
-	srcErrList[10] = 1
-	srcErrList[11] = 1
-	srcInErr[0] = 8
-	srcInErr[1] = 9
-	srcInErr[2] = 10
-	srcInErr[3] = 11
+	srcErrList[0] = 1
+	srcErrList[2] = 1
+	srcErrList[3] = 1
+	srcErrList[4] = 1
+	srcInErr[0] = 0
+	srcInErr[1] = 2
+	srcInErr[2] = 3
+	srcInErr[3] = 4
 
 	nErrs := 4
 	nSrcErrs := 4
