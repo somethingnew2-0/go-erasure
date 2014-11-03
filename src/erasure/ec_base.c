@@ -334,6 +334,13 @@ int gf_gen_decode_matrix(unsigned char *encode_matrix,
 				unsigned char *src_in_err,
 				int nerrs, int nsrcerrs, int k, int m)
 {
+  printf("nerrs %d nsrcerrs %d\n", nerrs, nsrcerrs);
+	for (int i = 0; i < nerrs; i++) {
+    printf("src_err_list %d\n", src_err_list[i]);
+  }
+	for (int i = 0; i < m; i++) {
+    printf("src_in_err %d\n", src_in_err[i]);
+  }
 	int i, j, p;
 	int r;
 	unsigned char *b, *invert_matrix, s;

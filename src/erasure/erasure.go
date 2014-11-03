@@ -51,17 +51,17 @@ func Hello() {
 
 	decodeMatrix := make([]byte, m*k)
 	decodeIndex := make([]int32, m)
-	srcErrList := make([]int32, m)
-	srcInErr := make([]int32, m-k)
+	srcErrList := make([]int8, m-k)
+	srcInErr := make([]int8, m)
 
-	srcErrList[0] = 1
-	srcErrList[2] = 1
-	srcErrList[3] = 1
-	srcErrList[4] = 1
-	srcInErr[0] = 0
-	srcInErr[1] = 2
-	srcInErr[2] = 3
-	srcInErr[3] = 4
+	srcErrList[0] = 0
+	srcErrList[1] = 2
+	srcErrList[2] = 3
+	srcErrList[3] = 4
+	srcInErr[0] = 1
+	srcInErr[2] = 1
+	srcInErr[3] = 1
+	srcInErr[4] = 1
 
 	nErrs := 4
 	nSrcErrs := 4
