@@ -13,9 +13,9 @@ import (
 )
 
 func Hello() {
-	m := 12
-	k := 8
-	sourceLength := 16
+	var m int32 = 12
+	var k int32 = 8
+	var sourceLength int32 = 16
 
 	source := make([]byte, k*sourceLength)
 	destination := make([]byte, m*sourceLength)
@@ -75,8 +75,15 @@ func Hello() {
 
 	C.ec_init_tables(C.int(k), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&g_tbls[0]))
 	// fmt.Printf("G Tables: %x\n", g_tbls)
+	returned := []byte{}
+	var i int32 = 0
+	for i = 0; i <= k; i++ {
+		returned = append(returned, destination[(decodeIndex[i]*sourceLength):(decodeIndex[i]+1)*sourceLength]...)
+	}
+
+	fmt.Printf("Returned: %x\n", returned)
 
 	recovered := make([]byte, m*sourceLength)
-	C.ec_encode_data(C.int(sourceLength), C.int(k), C.int(m), (*C.uchar)(&g_tbls[0]), (*C.uchar)(&destination[0]), (*C.uchar)(&recovered[0]))
+	C.ec_encode_data(C.int(sourceLength), C.int(k), C.int(m), (*C.uchar)(&g_tbls[0]), (*C.uchar)(&returned[0]), (*C.uchar)(&recovered[0]))
 	// fmt.Printf("Recovered: %x\n", recovered)
 }
