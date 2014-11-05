@@ -1,18 +1,17 @@
-package main
+package erasure
 
 import (
-	"erasure"
-
 	"log"
 	"math/rand"
+	"testing"
 )
 
-func main() {
+func TestErasure(t *testing.T) {
 	m := 12
 	k := 8
 	size := 8 * 16
 	// erasure.Hello()
-	code := erasure.NewCode(m, k, size)
+	code := NewCode(m, k, size)
 
 	source := make([]byte, size)
 	for i := range source {
