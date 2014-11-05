@@ -1,6 +1,7 @@
 package erasure
 
 import (
+	"bytes"
 	"log"
 	"math/rand"
 	"testing"
@@ -25,15 +26,21 @@ func TestErasure(t *testing.T) {
 	log.Printf("Encoded: %x\n", encoded)
 	srcErrList := []int8{0, 2, 3, 4}
 
+	corrupted := make([]byte, size)
+	copy(corrupted, source)
 	for _, err := range srcErrList {
 		for i := 0; i < code.VectorLength; i++ {
-			source[int(err)*code.VectorLength+i] = 0x62
+			corrupted[int(err)*code.VectorLength+i] = 0x62
 		}
 	}
 
-	log.Printf("Source Corrupted: %x\n", source)
+	log.Printf("Source Corrupted: %x\n", corrupted)
 
-	recovered := code.Decode(append(source, encoded...), srcErrList)
+	recovered := code.Decode(append(corrupted, encoded...), srcErrList)
 	log.Printf("Recovered: %x\n", recovered)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered")
+	}
 
 }
