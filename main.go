@@ -28,4 +28,5 @@ func main() {
 
 	recovered := code.Decode(append(source, encoded...), srcErrList)
 	log.Printf("Recovered: %x\n", recovered)
+
 }

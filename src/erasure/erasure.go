@@ -92,14 +92,20 @@ func (c *Code) Decode(encoded []byte, srcErrList []int8) []byte {
 	C.ec_init_tables(C.int(c.K), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&c.galoisTables[0]))
 
 	recovered := []byte{}
-	for i := 0; i <= c.K; i++ {
-		recovered = append(recovered, encoded[(decodeIndex[i]*int32(c.VectorLength)):(decodeIndex[i]+1)*int32(c.VectorLength)]...)
+	for i := 0; i < c.K; i++ {
+		recovered = append(recovered, encoded[(int(decodeIndex[i])*c.VectorLength):int(decodeIndex[i]+1)*c.VectorLength]...)
 	}
 
 	data := make([]byte, c.M*c.VectorLength)
 	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&data[0]))
 
-	return data[:nErrs*c.VectorLength]
+	copy(recovered[0:c.K*c.VectorLength], encoded)
+
+	for i, err := range srcErrList {
+		copy(recovered[int(err)*c.VectorLength:int(err+1)*c.VectorLength], data[i*c.VectorLength:(i+1)*c.VectorLength])
+	}
+
+	return recovered
 }
 
 func Hello() {
