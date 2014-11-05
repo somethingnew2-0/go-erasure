@@ -314,7 +314,7 @@ void ec_encode_data(int len, int srcs, int dests, unsigned char *v,
 	}
   
   printf("Dest Matrix: \n");
-  dump_matrix(dest, dests, len);
+  dump_matrix(dest, dests-srcs, len);
 }
 
 void gf_vect_mul(int len, unsigned char *a, unsigned char *src, unsigned char *dest)

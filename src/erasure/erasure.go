@@ -65,11 +65,11 @@ func (c *Code) Encode(data []byte) []byte {
 	return encoded
 }
 
-// Data buffer to decode must be of the k*size given in the constructor
+// Data buffer to decode must be of the m*size given in the constructor
 // The source error list must contain m-k values, corresponding to the vectors with errors
 // The returned decoded data is k*size
 func (c *Code) Decode(encoded []byte, srcErrList []int8) []byte {
-	if len(encoded) != c.K*c.VectorLength {
+	if len(encoded) != c.M*c.VectorLength {
 		log.Fatal("Data to decode is not the proper size")
 	}
 	if len(srcErrList) != c.M-c.K {
@@ -99,7 +99,7 @@ func (c *Code) Decode(encoded []byte, srcErrList []int8) []byte {
 	data := make([]byte, c.M*c.VectorLength)
 	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&data[0]))
 
-	return data[:c.K*c.VectorLength]
+	return data[:nErrs*c.VectorLength]
 }
 
 func Hello() {

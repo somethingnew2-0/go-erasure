@@ -4,6 +4,7 @@ import (
 	"erasure"
 
 	"log"
+	"math/rand"
 )
 
 func main() {
@@ -15,14 +16,16 @@ func main() {
 
 	source := make([]byte, size)
 	for i := range source {
-		source[i] = 0x62
+		source[i] = byte(rand.Int63() & 0xff) //0x62
 	}
+
+	log.Printf("Source: %x\n", source)
 
 	encoded := code.Encode(source)
 
 	log.Printf("Encoded: %x\n", encoded)
 	srcErrList := []int8{0, 2, 3, 4}
 
-	recovered := code.Decode(encoded, srcErrList)
+	recovered := code.Decode(append(source, encoded...), srcErrList)
 	log.Printf("Recovered: %x\n", recovered)
 }
