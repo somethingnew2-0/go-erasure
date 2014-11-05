@@ -95,13 +95,13 @@ func (c *Code) Decode(encoded []byte, srcErrList []int8) []byte {
 		recovered = append(recovered, encoded[(int(decodeIndex[i])*c.VectorLength):int(decodeIndex[i]+1)*c.VectorLength]...)
 	}
 
-	data := make([]byte, c.M*c.VectorLength)
-	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&data[0]))
+	decoded := make([]byte, (c.M-c.K)*c.VectorLength)
+	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
 
 	copy(recovered[0:c.K*c.VectorLength], encoded)
 
 	for i, err := range srcErrList {
-		copy(recovered[int(err)*c.VectorLength:int(err+1)*c.VectorLength], data[i*c.VectorLength:(i+1)*c.VectorLength])
+		copy(recovered[int(err)*c.VectorLength:int(err+1)*c.VectorLength], decoded[i*c.VectorLength:(i+1)*c.VectorLength])
 	}
 
 	return recovered
