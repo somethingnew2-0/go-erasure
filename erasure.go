@@ -94,7 +94,7 @@ func (c *Code) Decode(encoded []byte, srcErrList []byte) []byte {
 		recovered = append(recovered, encoded[(int(decodeIndex[i])*c.VectorLength):int(decodeIndex[i]+1)*c.VectorLength]...)
 	}
 
-	decoded := make([]byte, (c.M-c.K)*c.VectorLength)
+	decoded := make([]byte, c.M*c.VectorLength)
 	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
 
 	copy(recovered, encoded)
