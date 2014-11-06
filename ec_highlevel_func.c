@@ -33,14 +33,15 @@
 
 void ec_init_tables(int k, int rows, unsigned char *a, unsigned char *g_tbls)
 {
+	int i, j;
+  unsigned char *b;
+  
   printf("k %d rows %d\n", k, rows);
   printf("A: ");
-  for(int i = 0; i < k * rows; i++) {
+  for(i = 0; i < k * rows; i++) {
     printf("%x", a[i]);
   }
   printf("\n");
-	int i, j;
-  unsigned char *b;
   b = g_tbls;
 
 	for (i = 0; i < rows; i++) {
@@ -51,7 +52,7 @@ void ec_init_tables(int k, int rows, unsigned char *a, unsigned char *g_tbls)
 	}
   
   printf("G Tables: ");
-  for(int i = 0; i < k * rows * 32; i++) {
+  for(i = 0; i < k * rows * 32; i++) {
     printf("%x", b[i]);
   }
   printf("\n");
