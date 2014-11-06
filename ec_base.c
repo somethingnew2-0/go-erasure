@@ -110,7 +110,7 @@ void gf_gen_cauchy1_matrix(unsigned char *a, int m, int k)
 			*p++ = gf_inv(i ^ j);
   
   printf("Encode Matrix: ");
-  for(int i = 0; i < k * m; i++) {
+  for(i = 0; i < k * m; i++) {
     printf("%x", a[i]);
   }
   printf("\n");
@@ -334,17 +334,18 @@ int gf_gen_decode_matrix(unsigned char *encode_matrix,
 				unsigned char *src_in_err,
 				int nerrs, int nsrcerrs, int k, int m)
 {
-  printf("nerrs %d nsrcerrs %d\n", nerrs, nsrcerrs);
-	for (int i = 0; i < nerrs; i++) {
-    printf("src_err_list %d\n", src_err_list[i]);
-  }
-	for (int i = 0; i < m; i++) {
-    printf("src_in_err %d\n", src_in_err[i]);
-  }
 	int i, j, p;
 	int r;
 	unsigned char *b, *invert_matrix, s;
 	int incr = 0;
+  
+  printf("nerrs %d nsrcerrs %d\n", nerrs, nsrcerrs);
+	for (i = 0; i < nerrs; i++) {
+    printf("src_err_list %d\n", src_err_list[i]);
+  }
+	for (i = 0; i < m; i++) {
+    printf("src_in_err %d\n", src_in_err[i]);
+  }
 
 	b = malloc(k * m);
 	invert_matrix = malloc(k * m);
@@ -412,7 +413,7 @@ int gf_gen_decode_matrix(unsigned char *encode_matrix,
 	free(invert_matrix);
   
   printf("Decode Index: ");
-  for(int i = 0; i < m; i++) {
+  for(i = 0; i < m; i++) {
     printf("%x", decode_index[i]);
   }
   printf("\n");
