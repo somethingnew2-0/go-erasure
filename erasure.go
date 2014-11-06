@@ -71,11 +71,11 @@ func (c *Code) Decode(encoded []byte, srcErrList []int8) []byte {
 	if len(encoded) != c.M*c.VectorLength {
 		log.Fatal("Data to decode is not the proper size")
 	}
-	if len(srcErrList) != c.M-c.K {
-		log.Fatal("Err list is not the proper size")
+	if len(srcErrList) > c.M-c.K {
+		log.Fatal("Too many errors, cannot decode")
 	}
 	decodeMatrix := make([]byte, c.M*c.K)
-	decodeIndex := make([]int32, c.M)
+	decodeIndex := make([]int32, c.K)
 	srcInErr := make([]int8, c.M)
 	nErrs := len(srcErrList)
 	nSrcErrs := 0
@@ -98,7 +98,7 @@ func (c *Code) Decode(encoded []byte, srcErrList []int8) []byte {
 	decoded := make([]byte, (c.M-c.K)*c.VectorLength)
 	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
 
-	copy(recovered[0:c.K*c.VectorLength], encoded)
+	copy(recovered, encoded)
 
 	for i, err := range srcErrList {
 		copy(recovered[int(err)*c.VectorLength:int(err+1)*c.VectorLength], decoded[i*c.VectorLength:(i+1)*c.VectorLength])
