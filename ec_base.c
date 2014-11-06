@@ -329,7 +329,7 @@ void gf_vect_mul(int len, unsigned char *a, unsigned char *src, unsigned char *d
 // Generate decode matrix from encode matrix
 int gf_gen_decode_matrix(unsigned char *encode_matrix,
 				unsigned char *decode_matrix,
-				unsigned int *decode_index,
+				unsigned char *decode_index,
 				unsigned char *src_err_list,
 				unsigned char *src_in_err,
 				int nerrs, int nsrcerrs, int k, int m)

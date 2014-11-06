@@ -202,7 +202,7 @@ int gf_invert_matrix(unsigned char *in, unsigned char *out, const int n);
  */
 int gf_gen_decode_matrix(unsigned char *encode_matrix,
 				unsigned char *decode_matrix,
-				unsigned int *decode_index,
+				unsigned char *decode_index,
 				unsigned char *src_err_list,
 				unsigned char *src_in_err,
 				int nerrs, int nsrcerrs, int k, int m);

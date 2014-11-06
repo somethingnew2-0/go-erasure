@@ -1,7 +1,7 @@
 package erasure
 
 /*
-#cgo CFLAGS: -Wall
+#cgo CFLAGS: -Wall -std=gnu99
 #include "types.h"
 #include "erasure_code.h"
 */
@@ -9,7 +9,6 @@ import "C"
 
 import (
 	"log"
-	"unsafe"
 )
 
 type Code struct {
@@ -67,7 +66,7 @@ func (c *Code) Encode(data []byte) []byte {
 // Data buffer to decode must be of the m*vector given in the constructor
 // The source error list must contain m-k values, corresponding to the vectors with errors
 // The returned decoded data is k*vector
-func (c *Code) Decode(encoded []byte, srcErrList []int8) []byte {
+func (c *Code) Decode(encoded []byte, srcErrList []byte) []byte {
 	if len(encoded) != c.M*c.VectorLength {
 		log.Fatal("Data to decode is not the proper size")
 	}
@@ -75,18 +74,18 @@ func (c *Code) Decode(encoded []byte, srcErrList []int8) []byte {
 		log.Fatal("Too many errors, cannot decode")
 	}
 	decodeMatrix := make([]byte, c.M*c.K)
-	decodeIndex := make([]int32, c.K)
-	srcInErr := make([]int8, c.M)
+	decodeIndex := make([]byte, c.K)
+	srcInErr := make([]byte, c.M)
 	nErrs := len(srcErrList)
 	nSrcErrs := 0
 	for _, err := range srcErrList {
 		srcInErr[err] = 1
-		if err < int8(c.K) {
+		if int(err) < c.K {
 			nSrcErrs++
 		}
 	}
 
-	C.gf_gen_decode_matrix((*C.uchar)(&c.EncodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uint)(unsafe.Pointer(&decodeIndex[0])), (*C.uchar)(unsafe.Pointer(&srcErrList[0])), (*C.uchar)(unsafe.Pointer(&srcInErr[0])), C.int(nErrs), C.int(nSrcErrs), C.int(c.K), C.int(c.M))
+	C.gf_gen_decode_matrix((*C.uchar)(&c.EncodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&decodeIndex[0]), (*C.uchar)(&srcErrList[0]), (*C.uchar)(&srcInErr[0]), C.int(nErrs), C.int(nSrcErrs), C.int(c.K), C.int(c.M))
 
 	C.ec_init_tables(C.int(c.K), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&c.galoisTables[0]))
 

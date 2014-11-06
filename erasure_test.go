@@ -23,19 +23,20 @@ func TestErasure_12_8(t *testing.T) {
 	encoded := code.Encode(source)
 
 	t.Logf("Encoded: %x\n", encoded)
-	srcErrList := []int8{0, 2, 3, 4}
+	srcErrList := []byte{0, 2, 3, 4}
 
 	corrupted := make([]byte, size)
 	copy(corrupted, source)
-	for _, err := range srcErrList {
-		for i := 0; i < code.VectorLength; i++ {
-			corrupted[int(err)*code.VectorLength+i] = 0x62
-		}
-	}
+	// for _, err := range srcErrList {
+	// 	for i := 0; i < code.VectorLength; i++ {
+	// 		corrupted[int(err)*code.VectorLength+i] = 0x62
+	// 	}
+	// }
 
 	t.Logf("Source Corrupted: %x\n", corrupted)
 
 	recovered := code.Decode(append(corrupted, encoded...), srcErrList)
+	// recovered = code.Decode(append(corrupted, encoded...), srcErrList)
 	t.Logf("Recovered: %x\n", recovered)
 
 	if !bytes.Equal(source, recovered) {
