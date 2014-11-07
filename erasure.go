@@ -66,26 +66,26 @@ func (c *Code) Encode(data []byte) []byte {
 // Data buffer to decode must be of the m*vector given in the constructor
 // The source error list must contain m-k values, corresponding to the vectors with errors
 // The returned decoded data is k*vector
-func (c *Code) Decode(encoded []byte, srcErrList []byte) []byte {
+func (c *Code) Decode(encoded []byte, errList []byte) []byte {
 	if len(encoded) != c.M*c.VectorLength {
 		log.Fatal("Data to decode is not the proper size")
 	}
-	if len(srcErrList) > c.M-c.K {
+	if len(errList) > c.M-c.K {
 		log.Fatal("Too many errors, cannot decode")
 	}
 	decodeMatrix := make([]byte, c.M*c.K)
 	decodeIndex := make([]byte, c.K)
 	srcInErr := make([]byte, c.M)
-	nErrs := len(srcErrList)
+	nErrs := len(errList)
 	nSrcErrs := 0
-	for _, err := range srcErrList {
+	for _, err := range errList {
 		srcInErr[err] = 1
 		if int(err) < c.K {
 			nSrcErrs++
 		}
 	}
 
-	C.gf_gen_decode_matrix((*C.uchar)(&c.EncodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&decodeIndex[0]), (*C.uchar)(&srcErrList[0]), (*C.uchar)(&srcInErr[0]), C.int(nErrs), C.int(nSrcErrs), C.int(c.K), C.int(c.M))
+	C.gf_gen_decode_matrix((*C.uchar)(&c.EncodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&decodeIndex[0]), (*C.uchar)(&errList[0]), (*C.uchar)(&srcInErr[0]), C.int(nErrs), C.int(nSrcErrs), C.int(c.K), C.int(c.M))
 
 	C.ec_init_tables(C.int(c.K), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&c.galoisTables[0]))
 
@@ -99,8 +99,10 @@ func (c *Code) Decode(encoded []byte, srcErrList []byte) []byte {
 
 	copy(recovered, encoded)
 
-	for i, err := range srcErrList {
-		copy(recovered[int(err)*c.VectorLength:int(err+1)*c.VectorLength], decoded[i*c.VectorLength:(i+1)*c.VectorLength])
+	for i, err := range errList {
+		if int(err) < c.K {
+			copy(recovered[int(err)*c.VectorLength:int(err+1)*c.VectorLength], decoded[i*c.VectorLength:(i+1)*c.VectorLength])
+		}
 	}
 
 	return recovered
