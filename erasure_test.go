@@ -3,6 +3,7 @@ package erasure
 import (
 	"bytes"
 	"math/rand"
+	"sort"
 	"testing"
 )
 
@@ -17,7 +18,29 @@ func corrupt(source, errList []byte, vectorLength int) []byte {
 	return corrupted
 }
 
-func TestErasure_12_8(t *testing.T) {
+func randomErrorList(m, numberOfErrs int) []byte {
+	set := make(map[int]bool, m)
+	errListInts := make([]int, numberOfErrs)
+	for i := 0; i < numberOfErrs; i++ {
+		err := rand.Intn(m)
+		for set[err] {
+			err = rand.Intn(m)
+		}
+		set[err] = true
+		errListInts[i] = err
+	}
+
+	sort.Ints(errListInts)
+
+	errList := make([]byte, numberOfErrs)
+	for i, err := range errListInts {
+		errList[i] = byte(err)
+	}
+
+	return errList
+}
+
+func TestBasicErasure_12_8(t *testing.T) {
 	m := 12
 	k := 8
 	vectorLength := 16
@@ -43,7 +66,7 @@ func TestErasure_12_8(t *testing.T) {
 	}
 }
 
-func TestErasure_16_8(t *testing.T) {
+func TestBasicErasure_16_8(t *testing.T) {
 	m := 16
 	k := 8
 	vectorLength := 16
@@ -69,8 +92,8 @@ func TestErasure_16_8(t *testing.T) {
 	}
 }
 
-func TestErasure_17_8(t *testing.T) {
-	m := 17
+func TestBasicErasure_20_8(t *testing.T) {
+	m := 20
 	k := 8
 	vectorLength := 16
 	size := k * vectorLength
@@ -84,7 +107,7 @@ func TestErasure_17_8(t *testing.T) {
 
 	encoded := code.Encode(source)
 
-	errList := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8}
+	errList := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 16, 17}
 
 	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
 
@@ -95,7 +118,7 @@ func TestErasure_17_8(t *testing.T) {
 	}
 }
 
-func TestErasure_9_5(t *testing.T) {
+func TestBasicErasure_9_5(t *testing.T) {
 	m := 9
 	k := 5
 	vectorLength := 16
@@ -111,6 +134,110 @@ func TestErasure_9_5(t *testing.T) {
 	encoded := code.Encode(source)
 
 	errList := []byte{0, 2, 3, 4}
+
+	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
+
+	recovered := code.Decode(corrupted, errList)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 4 errors")
+	}
+}
+
+func TestRandomErasure_12_8(t *testing.T) {
+	m := 12
+	k := 8
+	vectorLength := 16
+	size := k * vectorLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := randomErrorList(m, m-k)
+
+	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
+
+	recovered := code.Decode(corrupted, errList)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 4 errors")
+	}
+}
+
+func TestRandomErasure_16_8(t *testing.T) {
+	m := 16
+	k := 8
+	vectorLength := 16
+	size := k * vectorLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := randomErrorList(m, m-k)
+
+	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
+
+	recovered := code.Decode(corrupted, errList)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 8 errors")
+	}
+}
+
+func TestRandomErasure_20_8(t *testing.T) {
+	m := 20
+	k := 8
+	vectorLength := 16
+	size := k * vectorLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := randomErrorList(m, m-k)
+
+	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
+
+	recovered := code.Decode(corrupted, errList)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 4 errors")
+	}
+}
+
+func TestRandomErasure_9_5(t *testing.T) {
+	m := 9
+	k := 5
+	vectorLength := 16
+	size := k * vectorLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := randomErrorList(m, m-k)
 
 	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
 
