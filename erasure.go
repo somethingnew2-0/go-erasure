@@ -8,29 +8,80 @@ package erasure
 import "C"
 
 import (
-	"log"
+	"sync"
 )
 
 type Code struct {
-	M                  int
-	K                  int
-	VectorLength       int
-	EncodeMatrix       []byte
-	galoisTables       []byte
-	decodeGaloisTables []byte
+	M               int
+	K               int
+	VectorLength    int
+	EncodeMatrix    []byte
+	galoisTables    []byte
+	decodeTrie      *decodeTrieNode
+	decodeTrieMutex *sync.Mutex
+}
+
+type decodeTrieNode struct {
+	children     []*decodeTrieNode
+	galoisTables []byte
+	decodeIndex  []byte
+}
+
+func (c *Code) getDecode(errList []byte) *decodeTrieNode {
+	c.decodeTrieMutex.Lock()
+	defer c.decodeTrieMutex.Unlock()
+
+	var node *decodeTrieNode
+	if len(errList) == 0 {
+		node = c.decodeTrie
+	} else {
+		node = c.decodeTrie.getDecode(errList, 0, byte(c.M))
+	}
+	if node.galoisTables == nil || node.decodeIndex == nil {
+		node.galoisTables = make([]byte, c.K*(c.M-c.K)*32)
+		node.decodeIndex = make([]byte, c.K)
+
+		decodeMatrix := make([]byte, c.M*c.K)
+		srcInErr := make([]byte, c.M)
+		nErrs := len(errList)
+		nSrcErrs := 0
+		for _, err := range errList {
+			srcInErr[err] = 1
+			if int(err) < c.K {
+				nSrcErrs++
+			}
+		}
+
+		C.gf_gen_decode_matrix((*C.uchar)(&c.EncodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&node.decodeIndex[0]), (*C.uchar)(&errList[0]), (*C.uchar)(&srcInErr[0]), C.int(nErrs), C.int(nSrcErrs), C.int(c.K), C.int(c.M))
+
+		C.ec_init_tables(C.int(c.K), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&node.galoisTables[0]))
+	}
+
+	return node
+}
+
+func (n *decodeTrieNode) getDecode(errList []byte, parent, m byte) *decodeTrieNode {
+	node := n.children[errList[0]-parent]
+	if node == nil {
+		node = &decodeTrieNode{children: make([]*decodeTrieNode, m-errList[0])}
+		n.children[errList[0]-parent] = node
+	}
+	if len(errList) > 1 {
+		return node.getDecode(errList[1:], errList[0]+1, m)
+	}
+	return node
 }
 
 func NewCode(m int, k int, size int) *Code {
 	if m <= 0 || k <= 0 || k >= m || k > 127 || m > 127 || size < 0 {
-		log.Fatal("Invalid erasure code params")
+		panic("Invalid erasure code params")
 	}
 	if size%k != 0 {
-		log.Fatal("Size to encode is not divisable by k and therefore cannot be enocded in vector chunks")
+		panic("Size to encode is not divisable by k and therefore cannot be enocded in vector chunks")
 	}
 
 	encodeMatrix := make([]byte, m*k)
 	galoisTables := make([]byte, k*(m-k)*32)
-	decodeGaloisTables := make([]byte, k*(m-k)*32)
 
 	if k > 5 {
 		C.gf_gen_cauchy1_matrix((*C.uchar)(&encodeMatrix[0]), C.int(m), C.int(k))
@@ -40,12 +91,13 @@ func NewCode(m int, k int, size int) *Code {
 
 	C.ec_init_tables(C.int(k), C.int(m-k), (*C.uchar)(&encodeMatrix[k*k]), (*C.uchar)(&galoisTables[0]))
 	return &Code{
-		M:                  m,
-		K:                  k,
-		VectorLength:       size / k,
-		EncodeMatrix:       encodeMatrix,
-		galoisTables:       galoisTables,
-		decodeGaloisTables: decodeGaloisTables,
+		M:               m,
+		K:               k,
+		VectorLength:    size / k,
+		EncodeMatrix:    encodeMatrix,
+		galoisTables:    galoisTables,
+		decodeTrie:      &decodeTrieNode{children: make([]*decodeTrieNode, m)},
+		decodeTrieMutex: &sync.Mutex{},
 	}
 }
 
@@ -54,7 +106,7 @@ func NewCode(m int, k int, size int) *Code {
 // encoded data is just the original data due to the identity matrix
 func (c *Code) Encode(data []byte) []byte {
 	if len(data) != c.K*c.VectorLength {
-		log.Fatal("Data to encode is not the proper size")
+		panic("Data to encode is not the proper size")
 	}
 	// Since the first k row of the encode matrix is actually the identity matrix
 	// we only need to encode the last m-k vectors of the matrix and append
@@ -70,34 +122,21 @@ func (c *Code) Encode(data []byte) []byte {
 // The returned decoded data is k*vector
 func (c *Code) Decode(encoded []byte, errList []byte) []byte {
 	if len(encoded) != c.M*c.VectorLength {
-		log.Fatal("Data to decode is not the proper size")
+		panic("Data to decode is not the proper size")
 	}
 	if len(errList) > c.M-c.K {
-		log.Fatal("Too many errors, cannot decode")
-	}
-	decodeMatrix := make([]byte, c.M*c.K)
-	decodeIndex := make([]byte, c.K)
-	srcInErr := make([]byte, c.M)
-	nErrs := len(errList)
-	nSrcErrs := 0
-	for _, err := range errList {
-		srcInErr[err] = 1
-		if int(err) < c.K {
-			nSrcErrs++
-		}
+		panic("Too many errors, cannot decode")
 	}
 
-	C.gf_gen_decode_matrix((*C.uchar)(&c.EncodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&decodeIndex[0]), (*C.uchar)(&errList[0]), (*C.uchar)(&srcInErr[0]), C.int(nErrs), C.int(nSrcErrs), C.int(c.K), C.int(c.M))
-
-	C.ec_init_tables(C.int(c.K), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&c.decodeGaloisTables[0]))
+	node := c.getDecode(errList)
 
 	recovered := []byte{}
 	for i := 0; i < c.K; i++ {
-		recovered = append(recovered, encoded[(int(decodeIndex[i])*c.VectorLength):int(decodeIndex[i]+1)*c.VectorLength]...)
+		recovered = append(recovered, encoded[(int(node.decodeIndex[i])*c.VectorLength):int(node.decodeIndex[i]+1)*c.VectorLength]...)
 	}
 
 	decoded := make([]byte, c.M*c.VectorLength)
-	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&c.decodeGaloisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
+	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&node.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
 
 	copy(recovered, encoded)
 
