@@ -3,6 +3,7 @@ package erasure
 import (
 	"bytes"
 	"math/rand"
+	"runtime"
 	"sort"
 	"testing"
 )
@@ -261,6 +262,8 @@ func BenchmarkEncode_12_8(b *testing.B) {
 		source[i] = byte(rand.Int63() & 0xff) //0x62
 	}
 
+	b.SetBytes(int64(size))
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	b.ResetTimer()
 
 	b.RunParallel(func(pb *testing.PB) {
@@ -289,6 +292,8 @@ func BenchmarkDecode_12_8(b *testing.B) {
 
 	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
 
+	b.SetBytes(int64(size))
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	b.ResetTimer()
 
 	b.RunParallel(func(pb *testing.PB) {
