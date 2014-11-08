@@ -247,3 +247,57 @@ func TestRandomErasure_9_5(t *testing.T) {
 		t.Error("Source was not sucessfully recovered with 4 errors")
 	}
 }
+
+func BenchmarkEncode_12_8(b *testing.B) {
+	m := 12
+	k := 8
+	vectorLength := 16
+	size := k * vectorLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			code.Encode(source)
+		}
+	})
+}
+
+func BenchmarkDecode_12_8(b *testing.B) {
+	m := 12
+	k := 8
+	vectorLength := 16
+	size := k * vectorLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := []byte{0, 2, 3, 4}
+
+	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			recovered := code.Decode(corrupted, errList)
+
+			if !bytes.Equal(source, recovered) {
+				b.Error("Source was not sucessfully recovered with 4 errors")
+			}
+		}
+	})
+}
