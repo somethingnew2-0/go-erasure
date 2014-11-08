@@ -12,11 +12,12 @@ import (
 )
 
 type Code struct {
-	M            int
-	K            int
-	VectorLength int
-	EncodeMatrix []byte
-	galoisTables []byte
+	M                  int
+	K                  int
+	VectorLength       int
+	EncodeMatrix       []byte
+	galoisTables       []byte
+	decodeGaloisTables []byte
 }
 
 func NewCode(m int, k int, size int) *Code {
@@ -29,6 +30,7 @@ func NewCode(m int, k int, size int) *Code {
 
 	encodeMatrix := make([]byte, m*k)
 	galoisTables := make([]byte, k*(m-k)*32)
+	decodeGaloisTables := make([]byte, k*(m-k)*32)
 
 	if k > 5 {
 		C.gf_gen_cauchy1_matrix((*C.uchar)(&encodeMatrix[0]), C.int(m), C.int(k))
@@ -36,12 +38,14 @@ func NewCode(m int, k int, size int) *Code {
 		C.gf_gen_rs_matrix((*C.uchar)(&encodeMatrix[0]), C.int(m), C.int(k))
 	}
 
+	C.ec_init_tables(C.int(k), C.int(m-k), (*C.uchar)(&encodeMatrix[k*k]), (*C.uchar)(&galoisTables[0]))
 	return &Code{
-		M:            m,
-		K:            k,
-		VectorLength: size / k,
-		EncodeMatrix: encodeMatrix,
-		galoisTables: galoisTables,
+		M:                  m,
+		K:                  k,
+		VectorLength:       size / k,
+		EncodeMatrix:       encodeMatrix,
+		galoisTables:       galoisTables,
+		decodeGaloisTables: decodeGaloisTables,
 	}
 }
 
@@ -56,9 +60,7 @@ func (c *Code) Encode(data []byte) []byte {
 	// we only need to encode the last m-k vectors of the matrix and append
 	// them to the original data
 	encoded := make([]byte, (c.M-c.K)*(c.VectorLength))
-	C.ec_init_tables(C.int(c.K), C.int(c.M-c.K), (*C.uchar)(&c.EncodeMatrix[c.K*c.K]), (*C.uchar)(&c.galoisTables[0]))
 	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M-c.K), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&data[0]), (*C.uchar)(&encoded[0]))
-
 	// return append(data, encoded...)
 	return encoded
 }
@@ -87,7 +89,7 @@ func (c *Code) Decode(encoded []byte, errList []byte) []byte {
 
 	C.gf_gen_decode_matrix((*C.uchar)(&c.EncodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&decodeIndex[0]), (*C.uchar)(&errList[0]), (*C.uchar)(&srcInErr[0]), C.int(nErrs), C.int(nSrcErrs), C.int(c.K), C.int(c.M))
 
-	C.ec_init_tables(C.int(c.K), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&c.galoisTables[0]))
+	C.ec_init_tables(C.int(c.K), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&c.decodeGaloisTables[0]))
 
 	recovered := []byte{}
 	for i := 0; i < c.K; i++ {
@@ -95,7 +97,7 @@ func (c *Code) Decode(encoded []byte, errList []byte) []byte {
 	}
 
 	decoded := make([]byte, c.M*c.VectorLength)
-	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
+	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&c.decodeGaloisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
 
 	copy(recovered, encoded)
 
