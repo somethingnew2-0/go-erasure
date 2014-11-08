@@ -11,6 +11,8 @@ import (
 	"sync"
 )
 
+// Manages state of the erasure coding scheme and its values should be
+// considered read-only.
 type Code struct {
 	M               int
 	K               int
@@ -72,6 +74,11 @@ func (n *decodeTrieNode) getDecode(errList []byte, parent, m byte) *decodeTrieNo
 	return node
 }
 
+// Constructor for creating a new erasure coding scheme. M is the total
+// number of shards output by the encoding.  K is the number of shards
+// that can recreate any data that was encoded.  Size is the size of the
+// byte array to encode.  It should be divisible by K as each shard
+// will be Size / K in length.  The maximum value for K and M is 127.
 func NewCode(m int, k int, size int) *Code {
 	if m <= 0 || k <= 0 || k >= m || k > 127 || m > 127 || size < 0 {
 		panic("Invalid erasure code params")
@@ -101,9 +108,9 @@ func NewCode(m int, k int, size int) *Code {
 	}
 }
 
-// Data buffer to encode must be of the k*vector given in the constructor
-// The returned encoded buffer is (m-k)*vector, since the first k*vector of the
-// encoded data is just the original data due to the identity matrix
+// The data buffer to encode must be of the length Size given in the constructor
+// The returned encoded buffer is (M-K)*Shard length, since the first Size bytes
+// of the encoded data is just the original data due to the identity matrix.
 func (c *Code) Encode(data []byte) []byte {
 	if len(data) != c.K*c.VectorLength {
 		panic("Data to encode is not the proper size")
@@ -117,9 +124,9 @@ func (c *Code) Encode(data []byte) []byte {
 	return encoded
 }
 
-// Data buffer to decode must be of the m*vector given in the constructor
-// The source error list must contain m-k values, corresponding to the vectors with errors
-// The returned decoded data is k*vector
+// Data buffer to decode must be of the (M/K)*Size given in the constructor
+// The source error list must contain M-K values, corresponding to the vectors with errors
+// The returned decoded data is the orignal data of length Size
 func (c *Code) Decode(encoded []byte, errList []byte) []byte {
 	if len(encoded) != c.M*c.VectorLength {
 		panic("Data to decode is not the proper size")
