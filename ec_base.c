@@ -35,19 +35,6 @@
 #include "ec_base.h"		// for GF tables
 #include "types.h"
 
-
-void dump_matrix(unsigned char *s, int k, int m)
-{
-	int i, j;
-	for (i = 0; i < k; i++) {
-		for (j = 0; j < m; j++) {
-			printf(" %2x", s[i*m+j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
-
 unsigned char gf_mul(unsigned char a, unsigned char b)
 {
 #ifndef GF_LARGE_TABLES
@@ -108,13 +95,6 @@ void gf_gen_cauchy1_matrix(unsigned char *a, int m, int k)
 	for (i = k; i < m; i++)
 		for (j = 0; j < k; j++)
 			*p++ = gf_inv(i ^ j);
-  
-  printf("Encode Matrix: ");
-  for(i = 0; i < k * m; i++) {
-    printf("%x", a[i]);
-  }
-  printf("\n");
-
 }
 
 int gf_invert_matrix(unsigned char *in_mat, unsigned char *out_mat, const int n)
@@ -307,14 +287,9 @@ void ec_encode_data(int len, int srcs, int dests, unsigned char *v,
 			s = 0;
 			for (j = 0; j < srcs; j++)
 				s ^= gf_mul(src[(j*len)+i], v[j * 32 + l * srcs * 32 + 1]);
-
-      /* printf("%d\n", (l*len)+i); */
 			dest[(l*len)+i] = s;
 		}
 	}
-  
-  printf("Dest Matrix: \n");
-  dump_matrix(dest, dests-srcs, len);
 }
 
 void gf_vect_mul(int len, unsigned char *a, unsigned char *src, unsigned char *dest)
@@ -338,14 +313,6 @@ int gf_gen_decode_matrix(unsigned char *encode_matrix,
 	int r;
 	unsigned char *b, *invert_matrix, s;
 	int incr = 0;
-  
-  printf("nerrs %d nsrcerrs %d\n", nerrs, nsrcerrs);
-	for (i = 0; i < nerrs; i++) {
-    printf("src_err_list %d\n", src_err_list[i]);
-  }
-	for (i = 0; i < m; i++) {
-    printf("src_in_err %d\n", src_in_err[i]);
-  }
 
 	b = malloc(k * m);
 	invert_matrix = malloc(k * m);
@@ -412,12 +379,6 @@ int gf_gen_decode_matrix(unsigned char *encode_matrix,
 	free(b);
 	free(invert_matrix);
   
-  printf("Decode Index: ");
-  for(i = 0; i < m; i++) {
-    printf("%x", decode_index[i]);
-  }
-  printf("\n");
-			
   return 0;
 }
 

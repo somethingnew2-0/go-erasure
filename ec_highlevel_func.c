@@ -34,28 +34,12 @@
 void ec_init_tables(int k, int rows, unsigned char *a, unsigned char *g_tbls)
 {
 	int i, j;
-  unsigned char *b;
-  
-  printf("k %d rows %d\n", k, rows);
-  printf("A: ");
-  for(i = 0; i < k * rows; i++) {
-    printf("%x", a[i]);
-  }
-  printf("\n");
-  b = g_tbls;
-
 	for (i = 0; i < rows; i++) {
 		for (j = 0; j < k; j++) {
 			gf_vect_mul_init(*a++, g_tbls);
 			g_tbls += 32;
 		}
 	}
-  
-  printf("G Tables: ");
-  for(i = 0; i < k * rows * 32; i++) {
-    printf("%x", b[i]);
-  }
-  printf("\n");
 }
 
 struct slver {
