@@ -23,7 +23,7 @@ import (
 type Code struct {
 	M               int
 	K               int
-	VectorLength    int
+	ShardLength     int
 	EncodeMatrix    []byte
 	galoisTables    []byte
 	decodeTrie      *decodeTrieNode
@@ -87,7 +87,7 @@ func NewCode(m int, k int, size int) *Code {
 		panic("Invalid erasure code params")
 	}
 	if size%k != 0 {
-		panic("Size to encode is not divisable by k and therefore cannot be enocded in vector chunks")
+		panic("Size to encode is not divisable by k and therefore cannot be encoded into shards")
 	}
 
 	encodeMatrix := make([]byte, m*k)
@@ -103,7 +103,7 @@ func NewCode(m int, k int, size int) *Code {
 	return &Code{
 		M:               m,
 		K:               k,
-		VectorLength:    size / k,
+		ShardLength:     size / k,
 		EncodeMatrix:    encodeMatrix,
 		galoisTables:    galoisTables,
 		decodeTrie:      &decodeTrieNode{children: make([]*decodeTrieNode, m)},
@@ -115,24 +115,24 @@ func NewCode(m int, k int, size int) *Code {
 // The returned encoded buffer is (M-K)*Shard length, since the first Size bytes
 // of the encoded data is just the original data due to the identity matrix.
 func (c *Code) Encode(data []byte) []byte {
-	if len(data) != c.K*c.VectorLength {
+	if len(data) != c.K*c.ShardLength {
 		panic("Data to encode is not the proper size")
 	}
-	// Since the first k row of the encode matrix is actually the identity matrix
-	// we only need to encode the last m-k vectors of the matrix and append
+	// Since the first k rows of the encode matrix is actually the identity matrix
+	// we only need to encode the last m-k shards of the data and append
 	// them to the original data
-	encoded := make([]byte, (c.M-c.K)*(c.VectorLength))
-	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M-c.K), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&data[0]), (*C.uchar)(&encoded[0]))
+	encoded := make([]byte, (c.M-c.K)*(c.ShardLength))
+	C.ec_encode_data(C.int(c.ShardLength), C.int(c.K), C.int(c.M-c.K), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&data[0]), (*C.uchar)(&encoded[0]))
 	// return append(data, encoded...)
 	return encoded
 }
 
 // Data buffer to decode must be of the (M/K)*Size given in the constructor.
-// The error list must contain M-K values, corresponding to the vectors
+// The error list must contain M-K values, corresponding to the shards
 // with errors (eg. [0, 2, 4, 6]).
 // The returned decoded data is the orignal data of length Size
 func (c *Code) Decode(encoded []byte, errList []byte) []byte {
-	if len(encoded) != c.M*c.VectorLength {
+	if len(encoded) != c.M*c.ShardLength {
 		panic("Data to decode is not the proper size")
 	}
 	if len(errList) > c.M-c.K {
@@ -140,22 +140,22 @@ func (c *Code) Decode(encoded []byte, errList []byte) []byte {
 	}
 	recovered := []byte{}
 	if len(errList) == 0 {
-		recovered = append(recovered, encoded[:c.K*c.VectorLength]...)
+		recovered = append(recovered, encoded[:c.K*c.ShardLength]...)
 	} else {
 		node := c.getDecode(errList)
 
 		for i := 0; i < c.K; i++ {
-			recovered = append(recovered, encoded[(int(node.decodeIndex[i])*c.VectorLength):int(node.decodeIndex[i]+1)*c.VectorLength]...)
+			recovered = append(recovered, encoded[(int(node.decodeIndex[i])*c.ShardLength):int(node.decodeIndex[i]+1)*c.ShardLength]...)
 		}
 
-		decoded := make([]byte, c.M*c.VectorLength)
-		C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&node.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
+		decoded := make([]byte, c.M*c.ShardLength)
+		C.ec_encode_data(C.int(c.ShardLength), C.int(c.K), C.int(c.M), (*C.uchar)(&node.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
 
 		copy(recovered, encoded)
 
 		for i, err := range errList {
 			if int(err) < c.K {
-				copy(recovered[int(err)*c.VectorLength:int(err+1)*c.VectorLength], decoded[i*c.VectorLength:(i+1)*c.VectorLength])
+				copy(recovered[int(err)*c.ShardLength:int(err+1)*c.ShardLength], decoded[i*c.ShardLength:(i+1)*c.ShardLength])
 			}
 		}
 	}

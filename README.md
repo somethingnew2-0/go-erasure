@@ -24,12 +24,12 @@ import (
   "github.com/somethingnew2-0/go-erasure"
 )
 
-func corrupt(source, errList []byte, vectorLength int) []byte {
+func corrupt(source, errList []byte, shardLength int) []byte {
 	corrupted := make([]byte, len(source))
 	copy(corrupted, source)
 	for _, err := range errList {
-		for i := 0; i < vectorLength; i++ {
-			corrupted[int(err)*vectorLength+i] = 0x00
+		for i := 0; i < shardLength; i++ {
+			corrupted[int(err)*shardLength+i] = 0x00
 		}
 	}
 	return corrupted
@@ -38,8 +38,8 @@ func corrupt(source, errList []byte, vectorLength int) []byte {
 func main() {
 	m := 12
 	k := 8
-	vectorLength := 16 // Length of a shard
-	size := k * vectorLength // Length of the data blob to encode
+	shardLength := 16 // Length of a shard
+	size := k * shardLength // Length of the data blob to encode
 
 	code := erasure.NewCode(m, k, size)
 
@@ -52,7 +52,7 @@ func main() {
 
 	errList := []byte{0, 2, 3, 4}
 
-	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
+	corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
 	recovered := code.Decode(corrupted, errList)
 
