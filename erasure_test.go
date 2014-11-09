@@ -160,7 +160,7 @@ func TestRandomErasure_12_8(t *testing.T) {
 
 	encoded := code.Encode(source)
 
-	errList := randomErrorList(m, m-k)
+	errList := randomErrorList(m, rand.Intn(m-k))
 
 	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
 
@@ -186,7 +186,7 @@ func TestRandomErasure_16_8(t *testing.T) {
 
 	encoded := code.Encode(source)
 
-	errList := randomErrorList(m, m-k)
+	errList := randomErrorList(m, rand.Intn(m-k))
 
 	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
 
@@ -212,7 +212,7 @@ func TestRandomErasure_20_8(t *testing.T) {
 
 	encoded := code.Encode(source)
 
-	errList := randomErrorList(m, m-k)
+	errList := randomErrorList(m, rand.Intn(m-k))
 
 	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
 
@@ -238,7 +238,7 @@ func TestRandomErasure_9_5(t *testing.T) {
 
 	encoded := code.Encode(source)
 
-	errList := randomErrorList(m, m-k)
+	errList := randomErrorList(m, rand.Intn(m-k))
 
 	corrupted := corrupt(append(source, encoded...), errList, vectorLength)
 
@@ -328,7 +328,7 @@ func BenchmarkRandomDecode_12_8(b *testing.B) {
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			errList := randomErrorList(m, m-k)
+			errList := randomErrorList(m, rand.Intn(m-k))
 
 			corrupted := corrupt(append(source, encoded...), errList, vectorLength)
 

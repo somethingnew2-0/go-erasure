@@ -40,12 +40,8 @@ func (c *Code) getDecode(errList []byte) *decodeTrieNode {
 	c.decodeTrieMutex.Lock()
 	defer c.decodeTrieMutex.Unlock()
 
-	var node *decodeTrieNode
-	if len(errList) == 0 {
-		node = c.decodeTrie
-	} else {
-		node = c.decodeTrie.getDecode(errList, 0, byte(c.M))
-	}
+	node := c.decodeTrie.getDecode(errList, 0, byte(c.M))
+
 	if node.galoisTables == nil || node.decodeIndex == nil {
 		node.galoisTables = make([]byte, c.K*(c.M-c.K)*32)
 		node.decodeIndex = make([]byte, c.K)
@@ -142,22 +138,25 @@ func (c *Code) Decode(encoded []byte, errList []byte) []byte {
 	if len(errList) > c.M-c.K {
 		panic("Too many errors, cannot decode")
 	}
-
-	node := c.getDecode(errList)
-
 	recovered := []byte{}
-	for i := 0; i < c.K; i++ {
-		recovered = append(recovered, encoded[(int(node.decodeIndex[i])*c.VectorLength):int(node.decodeIndex[i]+1)*c.VectorLength]...)
-	}
+	if len(errList) == 0 {
+		recovered = append(recovered, encoded[:c.K*c.VectorLength]...)
+	} else {
+		node := c.getDecode(errList)
 
-	decoded := make([]byte, c.M*c.VectorLength)
-	C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&node.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
+		for i := 0; i < c.K; i++ {
+			recovered = append(recovered, encoded[(int(node.decodeIndex[i])*c.VectorLength):int(node.decodeIndex[i]+1)*c.VectorLength]...)
+		}
 
-	copy(recovered, encoded)
+		decoded := make([]byte, c.M*c.VectorLength)
+		C.ec_encode_data(C.int(c.VectorLength), C.int(c.K), C.int(c.M), (*C.uchar)(&node.galoisTables[0]), (*C.uchar)(&recovered[0]), (*C.uchar)(&decoded[0]))
 
-	for i, err := range errList {
-		if int(err) < c.K {
-			copy(recovered[int(err)*c.VectorLength:int(err+1)*c.VectorLength], decoded[i*c.VectorLength:(i+1)*c.VectorLength])
+		copy(recovered, encoded)
+
+		for i, err := range errList {
+			if int(err) < c.K {
+				copy(recovered[int(err)*c.VectorLength:int(err+1)*c.VectorLength], decoded[i*c.VectorLength:(i+1)*c.VectorLength])
+			}
 		}
 	}
 
