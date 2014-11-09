@@ -20,6 +20,7 @@ package main
 import (
   "bytes"
   "log"
+  "math/rand"
   
   "github.com/somethingnew2-0/go-erasure"
 )
