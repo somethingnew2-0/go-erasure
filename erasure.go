@@ -108,7 +108,7 @@ func NewCode(m int, k int, size int) *Code {
 	}
 }
 
-// The data buffer to encode must be of the length Size given in the constructor
+// The data buffer to encode must be of the length Size given in the constructor.
 // The returned encoded buffer is (M-K)*Shard length, since the first Size bytes
 // of the encoded data is just the original data due to the identity matrix.
 func (c *Code) Encode(data []byte) []byte {
@@ -124,8 +124,9 @@ func (c *Code) Encode(data []byte) []byte {
 	return encoded
 }
 
-// Data buffer to decode must be of the (M/K)*Size given in the constructor
-// The source error list must contain M-K values, corresponding to the vectors with errors
+// Data buffer to decode must be of the (M/K)*Size given in the constructor.
+// The error list must contain M-K values, corresponding to the vectors
+// with errors (eg. [0, 2, 4, 6]).
 // The returned decoded data is the orignal data of length Size
 func (c *Code) Decode(encoded []byte, errList []byte) []byte {
 	if len(encoded) != c.M*c.VectorLength {
