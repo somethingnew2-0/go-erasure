@@ -1,10 +1,17 @@
+// Erasure coding is similar to RAID based parity encoding, but is more generalized
+// and powerful. When defining an erasure code, you specify a K and M variable.
+// M is the number of shards you wish to encode and K is the number shards it
+// takes to recreate your original data. Hence K must be less than M and usually
+// not equal (as that would be a pointless encoding). The real magic with erasure
+// coding is that fact that ANY K of the M shards can recreate the original data.
+// For example, a erasure coding scheme of K=8 and M=12 means any four of the
+// encoded shards can be lost while the original data can still be constructed
+// from the valid remaining eight shards.
 package erasure
 
-/*
-#cgo CFLAGS: -Wall -std=gnu99
-#include "types.h"
-#include "erasure_code.h"
-*/
+// #cgo CFLAGS: -Wall -std=gnu99
+// #include "types.h"
+// #include "erasure_code.h"
 import "C"
 
 import (
