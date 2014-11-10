@@ -252,7 +252,7 @@ func TestRandomErasure_9_5(t *testing.T) {
 func BenchmarkBasicEncode_12_8(b *testing.B) {
 	m := 12
 	k := 8
-	shardLength := 16
+	shardLength := 8192
 	size := k * shardLength
 
 	code := NewCode(m, k, size)
@@ -276,7 +276,7 @@ func BenchmarkBasicEncode_12_8(b *testing.B) {
 func BenchmarkBasicDecode_12_8(b *testing.B) {
 	m := 12
 	k := 8
-	shardLength := 16
+	shardLength := 8192
 	size := k * shardLength
 
 	code := NewCode(m, k, size)
@@ -310,7 +310,7 @@ func BenchmarkBasicDecode_12_8(b *testing.B) {
 func BenchmarkRandomDecode_12_8(b *testing.B) {
 	m := 12
 	k := 8
-	shardLength := 16
+	shardLength := 8192
 	size := k * shardLength
 
 	code := NewCode(m, k, size)

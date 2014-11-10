@@ -43,7 +43,7 @@ func (c *Code) getDecode(errList []byte) *decodeTrieNode {
 	node := c.decodeTrie.getDecode(errList, 0, byte(c.M))
 
 	if node.galoisTables == nil || node.decodeIndex == nil {
-		node.galoisTables = make([]byte, c.K*(c.M-c.K)*32)
+		node.galoisTables = make([]byte, c.K*c.M*32)
 		node.decodeIndex = make([]byte, c.K)
 
 		decodeMatrix := make([]byte, c.M*c.K)
