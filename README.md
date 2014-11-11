@@ -14,7 +14,7 @@ See the [GoDoc](https://godoc.org/github.com/somethingnew2-0/go-erasure) for an 
 
 ### Encode and decode random data
 
-```
+```go
 package main
 
 import (
