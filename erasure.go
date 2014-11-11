@@ -43,46 +43,41 @@ func (c *Code) getDecode(errList []byte) *decodeTrieNode {
 	} else {
 		node = c.decodeTrie.getDecode(errList, 0, byte(c.M))
 	}
+	node.mutex.Lock()
+	defer node.mutex.Unlock()
 	if node.galoisTables == nil || node.decodeIndex == nil {
-		node.mutex.Lock()
-		defer node.mutex.Unlock()
-		if node.galoisTables == nil || node.decodeIndex == nil {
-			node.galoisTables = make([]byte, c.K*(c.M-c.K)*32)
-			node.decodeIndex = make([]byte, c.K)
+		node.galoisTables = make([]byte, c.K*(c.M-c.K)*32)
+		node.decodeIndex = make([]byte, c.K)
 
-			decodeMatrix := make([]byte, c.M*c.K)
-			srcInErr := make([]byte, c.M)
-			nErrs := len(errList)
-			nSrcErrs := 0
-			for _, err := range errList {
-				srcInErr[err] = 1
-				if int(err) < c.K {
-					nSrcErrs++
-				}
+		decodeMatrix := make([]byte, c.M*c.K)
+		srcInErr := make([]byte, c.M)
+		nErrs := len(errList)
+		nSrcErrs := 0
+		for _, err := range errList {
+			srcInErr[err] = 1
+			if int(err) < c.K {
+				nSrcErrs++
 			}
-
-			C.gf_gen_decode_matrix((*C.uchar)(&c.EncodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&node.decodeIndex[0]), (*C.uchar)(&errList[0]), (*C.uchar)(&srcInErr[0]), C.int(nErrs), C.int(nSrcErrs), C.int(c.K), C.int(c.M))
-
-			C.ec_init_tables(C.int(c.K), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&node.galoisTables[0]))
 		}
+
+		C.gf_gen_decode_matrix((*C.uchar)(&c.EncodeMatrix[0]), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&node.decodeIndex[0]), (*C.uchar)(&errList[0]), (*C.uchar)(&srcInErr[0]), C.int(nErrs), C.int(nSrcErrs), C.int(c.K), C.int(c.M))
+
+		C.ec_init_tables(C.int(c.K), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&node.galoisTables[0]))
 	}
 
 	return node
 }
 
 func (n *decodeTrieNode) getDecode(errList []byte, parent, m byte) *decodeTrieNode {
+	n.mutex.Lock()
+	defer n.mutex.Unlock()
 	node := n.children[errList[0]-parent]
 	if node == nil {
-		n.mutex.Lock()
-		defer n.mutex.Unlock()
-		node = n.children[errList[0]-parent]
-		if node == nil {
-			node = &decodeTrieNode{
-				children: make([]*decodeTrieNode, m-errList[0]),
-				mutex:    &sync.Mutex{},
-			}
-			n.children[errList[0]-parent] = node
+		node = &decodeTrieNode{
+			children: make([]*decodeTrieNode, m-errList[0]),
+			mutex:    &sync.Mutex{},
 		}
+		n.children[errList[0]-parent] = node
 	}
 	if len(errList) > 1 {
 		return node.getDecode(errList[1:], errList[0]+1, m)
