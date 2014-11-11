@@ -66,7 +66,6 @@ func (c *Code) getDecode(errList []byte) *decodeTrieNode {
 
 func (n *decodeTrieNode) getDecode(errList []byte, parent, m byte) *decodeTrieNode {
 	n.mutex.Lock()
-	defer n.mutex.Unlock()
 	node := n.children[errList[0]-parent]
 	if node == nil {
 		node = &decodeTrieNode{
@@ -75,6 +74,7 @@ func (n *decodeTrieNode) getDecode(errList []byte, parent, m byte) *decodeTrieNo
 		}
 		n.children[errList[0]-parent] = node
 	}
+	n.mutex.Unlock()
 	if len(errList) > 1 {
 		return node.getDecode(errList[1:], errList[0]+1, m)
 	}
