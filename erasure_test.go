@@ -328,7 +328,7 @@ func BenchmarkRandomDecode_12_8(b *testing.B) {
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			errList := randomErrorList(m, rand.Intn(m-k))
+			errList := randomErrorList(m, rand.Intn(m-k)+1)
 
 			corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
