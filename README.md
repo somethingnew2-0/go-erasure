@@ -66,6 +66,6 @@ func main() {
 
 ## Development
 
-To start run `source install.sh` or more simply `. install.sh` to setup the git hooks and GOPATH for this project.
+To start run `source dev.sh` or more simply `. dev.sh` to setup the git hooks and GOPATH for this project.
 
 Run `go test` or `go test -bench .` to test the unit tests and benchmark tests.
