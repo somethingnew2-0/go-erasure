@@ -2,3 +2,7 @@ language: go
 
 go:
   - tip
+
+notifications:
+  email:
+    - peterc+github@ollins.me
