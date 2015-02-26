@@ -26,18 +26,18 @@ type Code struct {
 	ShardLength  int
 	EncodeMatrix []byte
 	galoisTables []byte
-	decodeTrie   *decodeTrieNode
+	decode       *decodeNode
 }
 
-type decodeTrieNode struct {
-	children     []*decodeTrieNode
+type decodeNode struct {
+	children     []*decodeNode
 	mutex        *sync.Mutex
 	galoisTables []byte
 	decodeIndex  []byte
 }
 
-func (c *Code) getDecode(errList []byte) *decodeTrieNode {
-	node := c.decodeTrie.getDecode(errList, 0, byte(c.M))
+func (c *Code) getDecode(errList []byte) *decodeNode {
+	node := c.decode.getDecode(errList, 0, byte(c.M))
 
 	node.mutex.Lock()
 	defer node.mutex.Unlock()
@@ -64,12 +64,12 @@ func (c *Code) getDecode(errList []byte) *decodeTrieNode {
 	return node
 }
 
-func (n *decodeTrieNode) getDecode(errList []byte, parent, m byte) *decodeTrieNode {
+func (n *decodeNode) getDecode(errList []byte, parent, m byte) *decodeNode {
 	n.mutex.Lock()
 	node := n.children[errList[0]-parent]
 	if node == nil {
-		node = &decodeTrieNode{
-			children: make([]*decodeTrieNode, m-errList[0]),
+		node = &decodeNode{
+			children: make([]*decodeNode, m-errList[0]),
 			mutex:    &sync.Mutex{},
 		}
 		n.children[errList[0]-parent] = node
@@ -110,8 +110,8 @@ func NewCode(m int, k int, size int) *Code {
 		ShardLength:  size / k,
 		EncodeMatrix: encodeMatrix,
 		galoisTables: galoisTables,
-		decodeTrie: &decodeTrieNode{
-			children: make([]*decodeTrieNode, m),
+		decode: &decodeNode{
+			children: make([]*decodeNode, m),
 			mutex:    &sync.Mutex{},
 		},
 	}
