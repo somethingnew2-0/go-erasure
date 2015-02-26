@@ -36,8 +36,32 @@ type decodeNode struct {
 	decodeIndex  []byte
 }
 
-func (c *Code) getDecode(errList []byte) *decodeNode {
-	node := c.decode.getDecode(errList, 0, byte(c.M))
+func newDecodeNode(errList []byte, m byte) *decodeNode {
+	return &decodeNode{
+		children: make([]*decodeNode, m-errList[0]),
+		mutex:    &sync.Mutex{},
+	}
+}
+
+func (n *decodeNode) getDecode(errList []byte, parent, m byte) (node *decodeNode) {
+	n.mutex.Lock()
+	node = n.children[errList[0]-parent]
+	if node == nil {
+		node = newDecodeNode(errList, m)
+	}
+	n.mutex.Unlock()
+	if len(errList) > 1 {
+		return node.getDecode(errList[1:], errList[0]+1, m)
+	}
+	return node
+}
+
+func (c *Code) getDecode(errList []byte, cache bool) (node *decodeNode) {
+	if cache {
+		node = c.decode.getDecode(errList, 0, byte(c.M))
+	} else {
+		node = newDecodeNode(errList, byte(c.M))
+	}
 
 	node.mutex.Lock()
 	defer node.mutex.Unlock()
@@ -61,23 +85,6 @@ func (c *Code) getDecode(errList []byte) *decodeNode {
 		C.ec_init_tables(C.int(c.K), C.int(nErrs), (*C.uchar)(&decodeMatrix[0]), (*C.uchar)(&node.galoisTables[0]))
 	}
 
-	return node
-}
-
-func (n *decodeNode) getDecode(errList []byte, parent, m byte) *decodeNode {
-	n.mutex.Lock()
-	node := n.children[errList[0]-parent]
-	if node == nil {
-		node = &decodeNode{
-			children: make([]*decodeNode, m-errList[0]),
-			mutex:    &sync.Mutex{},
-		}
-		n.children[errList[0]-parent] = node
-	}
-	n.mutex.Unlock()
-	if len(errList) > 1 {
-		return node.getDecode(errList[1:], errList[0]+1, m)
-	}
 	return node
 }
 
@@ -120,14 +127,14 @@ func NewCode(m int, k int, size int) *Code {
 // The data buffer to encode must be of the length Size given in the constructor.
 // The returned encoded buffer is (M-K)*Shard length, since the first Size bytes
 // of the encoded data is just the original data due to the identity matrix.
-func (c *Code) Encode(data []byte) []byte {
+func (c *Code) Encode(data []byte) (encoded []byte) {
 	if len(data) != c.K*c.ShardLength {
 		panic("Data to encode is not the proper size")
 	}
 	// Since the first k rows of the encode matrix is actually the identity matrix
 	// we only need to encode the last m-k shards of the data and append
 	// them to the original data
-	encoded := make([]byte, (c.M-c.K)*(c.ShardLength))
+	encoded = make([]byte, (c.M-c.K)*(c.ShardLength))
 	C.ec_encode_data(C.int(c.ShardLength), C.int(c.K), C.int(c.M-c.K), (*C.uchar)(&c.galoisTables[0]), (*C.uchar)(&data[0]), (*C.uchar)(&encoded[0]))
 	// return append(data, encoded...)
 	return encoded
@@ -136,19 +143,20 @@ func (c *Code) Encode(data []byte) []byte {
 // Data buffer to decode must be of the (M/K)*Size given in the constructor.
 // The error list must contain M-K values, corresponding to the shards
 // with errors (eg. [0, 2, 4, 6]).
+// Cache stores the decode matrices in a trie, enabling a faster decode
+// with a memory tradeoff.
 // The returned decoded data is the orignal data of length Size
-func (c *Code) Decode(encoded []byte, errList []byte) []byte {
+func (c *Code) Decode(encoded []byte, errList []byte, cache bool) (recovered []byte) {
 	if len(encoded) != c.M*c.ShardLength {
 		panic("Data to decode is not the proper size")
 	}
 	if len(errList) > c.M-c.K {
 		panic("Too many errors, cannot decode")
 	}
-	recovered := []byte{}
 	if len(errList) == 0 {
 		recovered = append(recovered, encoded[:c.K*c.ShardLength]...)
 	} else {
-		node := c.getDecode(errList)
+		node := c.getDecode(errList, cache)
 
 		for i := 0; i < c.K; i++ {
 			recovered = append(recovered, encoded[(int(node.decodeIndex[i])*c.ShardLength):int(node.decodeIndex[i]+1)*c.ShardLength]...)

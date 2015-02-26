@@ -60,7 +60,7 @@ func TestBasicErasure_12_8(t *testing.T) {
 
 	corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
-	recovered := code.Decode(corrupted, errList)
+	recovered := code.Decode(corrupted, errList, false)
 
 	if !bytes.Equal(source, recovered) {
 		t.Error("Source was not sucessfully recovered with 4 errors")
@@ -86,7 +86,7 @@ func TestBasicErasure_16_8(t *testing.T) {
 
 	corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
-	recovered := code.Decode(corrupted, errList)
+	recovered := code.Decode(corrupted, errList, false)
 
 	if !bytes.Equal(source, recovered) {
 		t.Error("Source was not sucessfully recovered with 8 errors")
@@ -112,7 +112,7 @@ func TestBasicErasure_20_8(t *testing.T) {
 
 	corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
-	recovered := code.Decode(corrupted, errList)
+	recovered := code.Decode(corrupted, errList, false)
 
 	if !bytes.Equal(source, recovered) {
 		t.Error("Source was not sucessfully recovered with 4 errors")
@@ -138,7 +138,7 @@ func TestBasicErasure_9_5(t *testing.T) {
 
 	corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
-	recovered := code.Decode(corrupted, errList)
+	recovered := code.Decode(corrupted, errList, false)
 
 	if !bytes.Equal(source, recovered) {
 		t.Error("Source was not sucessfully recovered with 4 errors")
@@ -164,7 +164,7 @@ func TestRandomErasure_12_8(t *testing.T) {
 
 	corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
-	recovered := code.Decode(corrupted, errList)
+	recovered := code.Decode(corrupted, errList, false)
 
 	if !bytes.Equal(source, recovered) {
 		t.Error("Source was not sucessfully recovered with 4 errors")
@@ -190,7 +190,7 @@ func TestRandomErasure_16_8(t *testing.T) {
 
 	corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
-	recovered := code.Decode(corrupted, errList)
+	recovered := code.Decode(corrupted, errList, false)
 
 	if !bytes.Equal(source, recovered) {
 		t.Error("Source was not sucessfully recovered with 8 errors")
@@ -216,7 +216,7 @@ func TestRandomErasure_20_8(t *testing.T) {
 
 	corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
-	recovered := code.Decode(corrupted, errList)
+	recovered := code.Decode(corrupted, errList, false)
 
 	if !bytes.Equal(source, recovered) {
 		t.Error("Source was not sucessfully recovered with 4 errors")
@@ -242,7 +242,215 @@ func TestRandomErasure_9_5(t *testing.T) {
 
 	corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
-	recovered := code.Decode(corrupted, errList)
+	recovered := code.Decode(corrupted, errList, false)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 4 errors")
+	}
+}
+
+func TestBasicCacheErasure_12_8(t *testing.T) {
+	m := 12
+	k := 8
+	shardLength := 16
+	size := k * shardLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := []byte{0, 2, 3, 4}
+
+	corrupted := corrupt(append(source, encoded...), errList, shardLength)
+
+	recovered := code.Decode(corrupted, errList, true)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 4 errors")
+	}
+}
+
+func TestBasicCacheErasure_16_8(t *testing.T) {
+	m := 16
+	k := 8
+	shardLength := 16
+	size := k * shardLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := []byte{0, 1, 2, 3, 4, 5, 6, 7}
+
+	corrupted := corrupt(append(source, encoded...), errList, shardLength)
+
+	recovered := code.Decode(corrupted, errList, true)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 8 errors")
+	}
+}
+
+func TestBasicCacheErasure_20_8(t *testing.T) {
+	m := 20
+	k := 8
+	shardLength := 16
+	size := k * shardLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 16, 17}
+
+	corrupted := corrupt(append(source, encoded...), errList, shardLength)
+
+	recovered := code.Decode(corrupted, errList, true)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 4 errors")
+	}
+}
+
+func TestBasicCacheErasure_9_5(t *testing.T) {
+	m := 9
+	k := 5
+	shardLength := 16
+	size := k * shardLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := []byte{0, 2, 3, 4}
+
+	corrupted := corrupt(append(source, encoded...), errList, shardLength)
+
+	recovered := code.Decode(corrupted, errList, true)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 4 errors")
+	}
+}
+
+func TestRandomCacheErasure_12_8(t *testing.T) {
+	m := 12
+	k := 8
+	shardLength := 16
+	size := k * shardLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := randomErrorList(m, rand.Intn(m-k))
+
+	corrupted := corrupt(append(source, encoded...), errList, shardLength)
+
+	recovered := code.Decode(corrupted, errList, true)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 4 errors")
+	}
+}
+
+func TestRandomCacheErasure_16_8(t *testing.T) {
+	m := 16
+	k := 8
+	shardLength := 16
+	size := k * shardLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := randomErrorList(m, rand.Intn(m-k))
+
+	corrupted := corrupt(append(source, encoded...), errList, shardLength)
+
+	recovered := code.Decode(corrupted, errList, true)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 8 errors")
+	}
+}
+
+func TestRandomCacheErasure_20_8(t *testing.T) {
+	m := 20
+	k := 8
+	shardLength := 16
+	size := k * shardLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := randomErrorList(m, rand.Intn(m-k))
+
+	corrupted := corrupt(append(source, encoded...), errList, shardLength)
+
+	recovered := code.Decode(corrupted, errList, true)
+
+	if !bytes.Equal(source, recovered) {
+		t.Error("Source was not sucessfully recovered with 4 errors")
+	}
+}
+
+func TestRandomCacheErasure_9_5(t *testing.T) {
+	m := 9
+	k := 5
+	shardLength := 16
+	size := k * shardLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	errList := randomErrorList(m, rand.Intn(m-k))
+
+	corrupted := corrupt(append(source, encoded...), errList, shardLength)
+
+	recovered := code.Decode(corrupted, errList, true)
 
 	if !bytes.Equal(source, recovered) {
 		t.Error("Source was not sucessfully recovered with 4 errors")
@@ -298,7 +506,65 @@ func BenchmarkBasicDecode_12_8(b *testing.B) {
 		corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
 		for pb.Next() {
-			recovered := code.Decode(corrupted, errList)
+			recovered := code.Decode(corrupted, errList, false)
+
+			if !bytes.Equal(source, recovered) {
+				b.Error("Source was not sucessfully recovered with 4 errors")
+			}
+		}
+	})
+}
+
+func BenchmarkBasicCacheEncode_12_8(b *testing.B) {
+	m := 12
+	k := 8
+	shardLength := 8192
+	size := k * shardLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	b.SetBytes(int64(size))
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			code.Encode(source)
+		}
+	})
+}
+
+func BenchmarkBasicCacheDecode_12_8(b *testing.B) {
+	m := 12
+	k := 8
+	shardLength := 8192
+	size := k * shardLength
+
+	code := NewCode(m, k, size)
+
+	source := make([]byte, size)
+	for i := range source {
+		source[i] = byte(rand.Int63() & 0xff) //0x62
+	}
+
+	encoded := code.Encode(source)
+
+	b.SetBytes(int64(size))
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		errList := []byte{0, 2, 3, 4}
+
+		corrupted := corrupt(append(source, encoded...), errList, shardLength)
+
+		for pb.Next() {
+			recovered := code.Decode(corrupted, errList, true)
 
 			if !bytes.Equal(source, recovered) {
 				b.Error("Source was not sucessfully recovered with 4 errors")
@@ -332,7 +598,7 @@ func BenchmarkRandomDecode_12_8(b *testing.B) {
 
 			corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
-			recovered := code.Decode(corrupted, errList)
+			recovered := code.Decode(corrupted, errList, rand.Float32() > 0.5)
 
 			if !bytes.Equal(source, recovered) {
 				b.Error("Source was not sucessfully recovered with 4 errors")
