@@ -55,7 +55,7 @@ func main() {
 
 	corrupted := corrupt(append(source, encoded...), errList, shardLength)
 
-	recovered := code.Decode(corrupted, errList)
+	recovered := code.Decode(corrupted, errList, true)
 
 	if !bytes.Equal(source, recovered) {
 		log.Fatal("Source was not sucessfully recovered with 4 errors")
