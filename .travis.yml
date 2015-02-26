@@ -5,4 +5,4 @@ go:
 
 notifications:
   email:
-    - peterc+github@ollins.me
+    - peterc+travis@ollins.me
