@@ -1,4 +1,4 @@
-go-erasure [![Build Status](https://travis-ci.org/somethingnew2-0/go-erasure.svg?branch=master)](https://travis-ci.org/somethingnew2-0/go-erasure)
+go-erasure [![Build Status](https://travis-ci.org/somethingnew2-0/go-erasure.svg?branch=master)](https://travis-ci.org/somethingnew2-0/go-erasure) [![Coverage Status](https://coveralls.io/repos/somethingnew2-0/go-erasure/badge.svg?branch=master)](https://coveralls.io/r/somethingnew2-0/go-erasure?branch=master)
 ========
 
 Go bindings for erasure coding (Reed-Solomon coding).
