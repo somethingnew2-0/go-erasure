@@ -1,6 +1,8 @@
 go-erasure [![Build Status](https://travis-ci.org/somethingnew2-0/go-erasure.svg?branch=master)](https://travis-ci.org/somethingnew2-0/go-erasure) [![Coverage Status](https://coveralls.io/repos/somethingnew2-0/go-erasure/badge.svg?branch=master)](https://coveralls.io/r/somethingnew2-0/go-erasure?branch=master)
 ========
 
+*Disclaimer: I recommend the [klauspost/reedsolomon](https://github.com/klauspost/reedsolomon) erasure coding library over this one as it is more performant and has better support for multiple architectures.*
+
 Go bindings for erasure coding (Reed-Solomon coding).
 
 Erasure coding is similar to RAID based parity encoding, but is more generalized and powerful.  When defining an erasure code, you specify a `k` and `m` variable. `m` is the number of shards you wish to encode and `k` is the number shards it takes to recreate your original data.  Hence `k` must be less than `m` and usually not equal (as that would be a pointless encoding). The real magic with erasure coding is that fact that ANY `k` of the `m` shards can recreate the original data.  For example, a erasure coding scheme of `k=8` and `m=12` means any four of the encoded shards can be lost while the original data can still be constructed from the valid remaining eight shards.
